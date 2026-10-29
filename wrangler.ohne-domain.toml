@@ -1,0 +1,17 @@
+# mixikon.com – Website + Vorschläge (Cloudflare Worker mit statischen Dateien und D1)
+# Projekt "MyProj Mixikon", Claude, 28.10.2026
+name = "mixikon"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+workers_dev = true
+
+# Ohne eigene Domain – nur mixikon.<konto>.workers.dev (Zwischenlösung)
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mixikon"
+database_id = "1641d492-c5d4-4aee-8102-e3b975af12ff"

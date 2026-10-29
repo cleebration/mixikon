@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Mixikon Freigabe</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Instrument+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Freigabe-Pult: Liste der Vorschläge, je Zeile Wort, Herkunft, Bedeutung, Stimmen, Entscheidung. */
+:root{--bg:#F3F4F8;--surface:#fff;--ink:#16182A;--muted:#5C6078;--line:#D9DBE6;--a:#2648D8;--b:#D6336C;--ab:#7B3BC7;--ok:#1E7D4F;--no:#B3261E;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;--body:"Instrument Sans","Segoe UI",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#11131F;--surface:#1A1D2D;--ink:#ECEDF5;--muted:#A3A7BF;--line:#2E3248;--a:#7D9BFF;--b:#FF7AA8;--ab:#C08BFF;--ok:#5BC48F;--no:#FF8A80;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1rem/1.5 var(--body);padding:24px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:960px;margin:0 auto}
+h1{font:900 1.6rem var(--display);margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 20px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+input,button{font:inherit}
+input[type=password],input[type=text]{padding:9px 12px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);min-width:0}
+.btn{border:1.5px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:8px 16px;font-weight:600;cursor:pointer}
+.btn.ghost{background:none;color:var(--ink)}
+.tab[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.tab{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer;font-weight:600}
+.tab .n{font:600 .75rem var(--mono);margin-left:6px;color:var(--muted)}
+.list{display:flex;flex-direction:column;gap:10px}
+.row{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:center}
+.row > *{min-width:0}
+.w{font:700 1.3rem var(--display);overflow-wrap:anywhere}
+.meta{font:400 .8rem var(--mono);color:var(--muted)}
+.row input[type=text]{width:100%}
+.acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.yes{background:var(--ok);border-color:var(--ok);color:#fff}
+.no{background:none;border-color:var(--no);color:var(--no)}
+.chk{display:flex;gap:6px;align-items:center;font-size:.9rem}
+.msg{color:var(--muted);margin:12px 0}
+.wa{color:var(--a)}.wb{color:var(--b)}.wab{color:var(--ab)}
+@media (max-width:620px){.row{grid-template-columns:1fr}.acts{justify-content:flex-start}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Mixikon Freigabe</h1>
+  <p class="sub">Vorschläge von Besuchern prüfen. Freigegebene Wörter erscheinen sofort im Lexikon auf mixikon.com.</p>
+  <form class="bar" id="keyform">
+    <label for="key" class="meta">Schlüssel</label>
+    <input type="password" id="key" autocomplete="current-password" placeholder="Admin-Schlüssel">
+    <button class="btn" type="submit">Laden</button>
+  </form>
+  <div class="bar" id="tabs" role="group" aria-label="Status">
+    <button class="tab" type="button" data-s="eingereicht" aria-pressed="true">Eingereicht<span class="n" id="n-eingereicht"></span></button>
+    <button class="tab" type="button" data-s="live" aria-pressed="false">Live<span class="n" id="n-live"></span></button>
+    <button class="tab" type="button" data-s="abgelehnt" aria-pressed="false">Abgelehnt<span class="n" id="n-abgelehnt"></span></button>
+  </div>
+  <p class="msg" id="msg">Schlüssel eingeben und laden.</p>
+  <div class="list" id="list"></div>
+</div>
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  let key = ""; try{ key = localStorage.getItem("mixikon-admin") || ""; }catch(e){}
+  $("key").value = key;
+  let status = "eingereicht";
+
+  async function api(path, opts = {}){
+    const r = await fetch(path, {...opts, headers:{"content-type":"application/json", authorization:"Bearer " + key, ...(opts.headers||{})}});
+    const d = await r.json().catch(() => ({ok:false, fehler:"Antwort unlesbar."}));
+    if(!r.ok) throw new Error(d.fehler || ("Fehler " + r.status));
+    return d;
+  }
+  async function load(){
+    if(!key){ $("msg").textContent = "Schlüssel eingeben und laden."; return; }
+    $("msg").textContent = "Lädt …";
+    try{
+      const d = await api("/api/admin/liste?status=" + status);
+      ["eingereicht","live","abgelehnt"].forEach(s => $("n-" + s).textContent = d.zahlen[s] || 0);
+      render(d.vorschlaege);
+      $("msg").textContent = d.vorschlaege.length ? "" : "Keine Einträge in dieser Liste.";
+    }catch(e){ $("msg").textContent = e.message; $("list").innerHTML = ""; }
+  }
+  function render(items){
+    const box = $("list"); box.innerHTML = "";
+    items.forEach(v => {
+      const row = document.createElement("div"); row.className = "row";
+      row.innerHTML =
+        '<div><div class="w">' + esc(v.wort) + '</div>' +
+        '<div class="meta">' + esc(v.wort1) + ' + ' + esc(v.wort2) + ' · ' + esc(v.sprache.toUpperCase()) + ' · ' + v.stimmen + ' Stimme' + (v.stimmen === 1 ? '' : 'n') + ' · ' + esc(v.erstellt.slice(0,10)) + '</div></div>' +
+        '<div class="acts"></div>' +
+        '<input type="text" id="m-' + v.id + '" maxlength="140" placeholder="Bedeutung" value="' + esc(v.bedeutung || "") + '">' +
+        '<label class="chk"><input type="checkbox" id="x-' + v.id + '"' + (v.merch ? " checked" : "") + '> für Merch</label>';
+      const acts = row.querySelector(".acts");
+      const mk = (label, cls, s) => { const b = document.createElement("button"); b.type = "button"; b.className = "btn " + cls; b.textContent = label; b.addEventListener("click", () => decide(v.id, s)); acts.appendChild(b); };
+      if(v.status !== "live") mk("Freigeben", "yes", "live");
+      if(v.status !== "abgelehnt") mk("Ablehnen", "no", "abgelehnt");
+      if(v.status !== "eingereicht") mk("Zurück", "ghost", "eingereicht");
+      box.appendChild(row);
+    });
+  }
+  async function decide(id, s){
+    try{
+      await api("/api/admin/entscheiden", {method:"POST", body: JSON.stringify({id, status:s, bedeutung: $("m-" + id).value, merch: $("x-" + id).checked})});
+      load();
+    }catch(e){ $("msg").textContent = e.message; }
+  }
+  $("keyform").addEventListener("submit", e => { e.preventDefault(); key = $("key").value.trim(); try{ localStorage.setItem("mixikon-admin", key); }catch(err){} load(); });
+  document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+    status = t.dataset.s; document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-pressed", String(x === t))); load();
+  }));
+  load();
+})();
+</script>
+</body>
+</html>
