@@ -19,3 +19,12 @@ binding = "ASSETS"
 binding = "DB"
 database_name = "mixikon"
 database_id = "1641d492-c5d4-4aee-8102-e3b975af12ff"
+
+# Eingänge an die Redaktion (Auftrag 88, 08.11.2026): täglich 08:00 Wien offene Vorschläge melden – per Service Binding,
+# damit Cloudflare Access der Redaktion nicht im Weg ist (wie moraro.world → redaktion).
+[[services]]
+binding = "REDAKTION"
+service = "redaktion"
+
+[triggers]
+crons = ["0 7 * * *"]

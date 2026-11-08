@@ -89,7 +89,27 @@ async function adminEntscheiden(request, env) {
   return json({ ok: true });
 }
 
+// Eingänge an die Redaktion (generelle Lösung „Meldungen aller Websites“, Leitstand-Auftrag 88, 08.11.2026):
+// täglich 08:00 Wien (Cron 07:00 UTC) die Zahl offener Vorschläge per Service Binding melden. Die Redaktion legt
+// höchstens eine Apple-Erinnerung je Tag an und zeigt alles unter redaktion.cleebration.com/eingaenge.
+// Gemeldet wird auch 0 (Stand), damit die Redaktion weiß, dass nichts mehr wartet.
+export async function meldeOffene(env) {
+  if (!env.REDAKTION?.fetch) return { ok: false, fehler: "Service Binding REDAKTION fehlt" };
+  const r = await env.DB.prepare("SELECT COUNT(*) AS n FROM vorschlag WHERE status = 'eingereicht'").first();
+  const n = Number(r?.n || 0);
+  const antwort = await env.REDAKTION.fetch(new Request("https://redaktion/api/eingang", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ site: "mixikon", art: "vorschlag", anzahl: n, link: "https://mixikon.com/admin",
+      titel: n === 1 ? "1 Wortvorschlag wartet auf Freigabe" : `${n} Wortvorschläge warten auf Freigabe` }),
+  }));
+  return { ok: antwort.ok, n, status: antwort.status };
+}
+
 export default {
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(meldeOffene(env).then((x) => console.log("Eingang Redaktion", JSON.stringify(x))).catch((e) => console.error("Eingang Redaktion", e)));
+  },
   async fetch(request, env) {
     const url = new URL(request.url);
     const p = url.pathname;
