@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kofferwort-Raten – Mixikon</title>
+<meta name="description" content="Zwei Wörter, ein Kofferwort: Welches steckt drin? Das Ratespiel von Mixikon, dem Lexikon der Kofferwörter. Kostenlos, ohne Anmeldung.">
+<meta property="og:title" content="Kofferwort-Raten – Mixikon">
+<meta property="og:url" content="https://mixikon.com/spiel">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Instrument+Sans:wght@400;600;700&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2316182A'/%3E%3Ctext x='16' y='23' font-family='Arial Black,Arial' font-weight='900' font-size='19' text-anchor='middle' fill='%23ffffff'%3EM%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#F3F4F8;--ink:#16182A;--muted:#5C6078;--a:#2648D8;--b:#D6336C;--ab:#7B3BC7;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;--body:"Instrument Sans","Segoe UI",system-ui,sans-serif}
+@media (prefers-color-scheme: dark){:root{--bg:#11131F;--ink:#ECEDF5;--muted:#A3A7BF;--a:#7D9BFF;--b:#FF7AA8;--ab:#C08BFF;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1.0625rem/1.6 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{font:900 1.6rem var(--display);text-decoration:none;color:var(--ink)}
+.logo .wa{color:var(--a)}.logo .wab{color:var(--ab)}.logo .wb{color:var(--b)}
+header a.zurueck{color:var(--ink);font-weight:600}
+h1{font:700 clamp(1.6rem,5vw,2.4rem)/1.15 var(--display);margin:0;text-wrap:balance}
+p.lead{margin:0;color:var(--muted);max-width:60ch}
+footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.9rem}
+footer a{color:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="logo" href="/" aria-label="Mixikon – Startseite"><span class="wa">Mix</span><span class="wab">i</span><span class="wb">kon</span></a>
+    <a class="zurueck" href="/#lexikon">Zum Lexikon</a>
+  </header>
+  <h1>Kofferwort-Raten</h1>
+  <p class="lead">Zwei Wörter, ein Koffer: Welches Kofferwort entsteht, wenn man sie zusammenpackt? Acht Wörter pro Runde.</p>
+  <div id="spiel" style="--sp-bg:#16182A;--sp-ink:#ECEDF5;--sp-akzent:#D6336C;--sp-akzent2:#7D9BFF;--sp-ok:#2E9E5B;--sp-font-display:var(--display);--sp-font-body:var(--body)"></div>
+  <noscript><p>Für das Spiel braucht dein Browser JavaScript.</p></noscript>
+  <p>Eigene Kofferwörter bauen? <a href="/">Zum Generator</a></p>
+  <footer>
+    <span>mixikon.com · Ein Kunstprojekt von <a href="https://www.cleebration.com" target="_blank" rel="noopener">cleebration</a></span>
+    <a href="/impressum.html">Impressum &amp; Datenschutz</a>
+  </footer>
+</div>
+<script type="module">
+  import { mount } from "/kofferwort-spiel.js";
+  mount(document.getElementById("spiel"));
+</script>
+</body>
+</html>
